@@ -4,9 +4,9 @@ import React from "react";
 const CardNoReservation = () => {
   return (
     <View style={styles.card}>
-      <Text style={styles.capture}> Trenutno nemate rezervacija </Text>
+      <Text style={styles.capture}> You currently have no reservations </Text>
       <Text style={styles.description}>
-        Samo nekoliko klikova Vas deli od Vašeg termina.
+      You're just a few clicks away from your appointment.
       </Text>
     </View>
   );
@@ -24,14 +24,14 @@ const styles = StyleSheet.create({
     height: 100,
   },
   capture: {
-    fontSize: 24,
+    fontSize: 20,
     textAlign: "center",
     padding: 10,
     fontWeight: "900",
     color: "white",
   },
   description: {
-    fontSize: 18,
+    fontSize: 16,
     color: "grey",
     textAlign: "center",
   },

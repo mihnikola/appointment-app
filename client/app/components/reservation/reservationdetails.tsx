@@ -1,130 +1,55 @@
 import Loader from "@/components/Loader";
 import ReservationContext from "@/context/ReservationContext";
-import { addMinutesToTime, convertDate,  getStorage } from "@/helpers";
+import { addMinutesToTime, convertDate } from "@/helpers";
 import Details from "@/shared-components/Details";
-import { useNavigation } from "@react-navigation/native";
-import axios from "axios";
-import Storage from "expo-storage";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext } from "react";
 import {
-  Alert,
   Image,
   ScrollView,
   StyleSheet,
   Text,
-  ToastAndroid,
   TouchableOpacity,
   View,
 } from "react-native";
-
+import useFetchReservation from "./hooks/useFetchReservation";
+import useReservationCancellationAlert from "./hooks/useReservationCancellationAlert";
+import useCancelReservation from "./hooks/useCancelReservation";
 const ReservationDetails = () => {
   const { reservation } = useContext(ReservationContext);
   const { reservationItem } = reservation;
   const reservationId = reservationItem?._id;
-  const [reservationData, setReservationData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const navigation = useNavigation();
-  const [tokenData,setTokenData] = useState(null);
-
-  useEffect(() => {
-    getStorage()
-    .then((res) => {
-      if (res) {
-        getReservationById(res);
-     
-      }
-    })
-    .catch((error) => {
-      setIsLoading(false);
-
-      console.log("error", error);
-    });
-    
-  
-  }, []);
-
-  const alertMessageHandler = () =>
-    Alert.alert(
-      "Upozorenje",
-      "Da li ste sigurni da želite da otkažete rezervaciju?",
-      [
-        {
-          text: "Odustani",
-          onPress: () => console.log("Cancel Pressed"),
-          style: "cancel",
-        },
-        {
-          text: "Ok",
-          onPress: () => {
-            submitHandler(1);
-          },
-        },
-      ]
-    );
-  const showToast = (text) => {
-    ToastAndroid.show(text, ToastAndroid.SHORT);
-  };
-
-  const submitHandler = async (rejected) => {
-    setIsLoading(true);
-    try {
-      await axios
-        .put(`${process.env.EXPO_PUBLIC_API_URL}/reservations/${reservationId}`, {
-          params: {
-            status: rejected,
-          },
-          headers: {
-            Authorization: `${tokenData}`,
-          },
-        })
-        .then((res) => {
-          if (res.status === 200) {
-            setIsLoading(false);
-            navigation.navigate("(tabs)", { screen: "explore" });
-            setTimeout(() => {
-              showToast(res.data.message);
-
-            }, 2000); 
-          }
-        })
-        .catch((err) => {
-          setIsLoading(false);
-          console.log(err);
-        });
-    } catch (error) {
-      console.log(error);
-      setIsLoading(false);
+  const { reservationData, isLoading, error, refetch } =
+    useFetchReservation(reservationId);
+  const { isCanceling, cancelError, cancelReservation } =
+    useCancelReservation();
+  const { showAlert } = useReservationCancellationAlert(() => {
+    if (reservationId) {
+      cancelReservation(reservationId);
+    } else {
+      console.error("Reservation ID is missing for cancellation.");
+      // Optionally show an error message to the user
     }
-    setIsLoading(false);
-  };
-  const getReservationById = async (tokenDa) => {
-    setIsLoading(true);
- 
-    setTokenData(tokenDa);
-    try {
-      await axios
-        .get(`${process.env.EXPO_PUBLIC_API_URL}/reservations/${reservationId}`, {
-          headers: {
-            Authorization: `${tokenDa}`,
-          },
-        })
-        .then((res) => {
-          if (res.status === 200) {
-            setReservationData(res.data);
-            setIsLoading(false);
-          }
-        })
-        .catch((err) => {
-          setIsLoading(false);
-          console.log(err);
-        });
-    } catch (error) {
-      console.log(error);
-      setIsLoading(false);
-    }
+  });
+
+  if (isLoading) {
+    return <Loader />
   }
 
-   
+  // if (error) {
+  //   return (
+  //     <View style={styles.errorContainer}>
+  //       <Text style={styles.errorText}>{error}</Text>
+  //       <TouchableOpacity onPress={refetch}>
+  //         <Text style={styles.retryButton}>Pokušaj ponovo</Text>
+  //       </TouchableOpacity>
+  //     </View>
+  //   );
+  // }
+
+  if (cancelError) {
+    // You might want to display a separate error message for cancellation
+    console.error("Cancellation Error:", cancelError);
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -133,19 +58,18 @@ const ReservationDetails = () => {
         style={styles.coverImage}
       />
       <View style={styles.greyLine} />
-      {!isLoading ? (
+      {reservationData && (
         <>
           <View style={styles.coverContent}>
             <Text
               style={[
+                styles.statusContent,
                 reservationData?.status === 0
                   ? styles.statusContentConfirm
                   : styles.statusContentRejected,
               ]}
             >
-              {reservationData?.status === 0
-                ? "Potvrđen"
-                : "Odbijen"}
+              {reservationData?.status === 0 ? "Potvrđen" : "Odbijen"}
             </Text>
 
             <Text style={styles.timeData}>
@@ -164,19 +88,33 @@ const ReservationDetails = () => {
             <Details data={reservationData} />
           </View>
           <TouchableOpacity
-            onPress={alertMessageHandler}
+            onPress={showAlert} // Use the showAlert function from the hook
             style={styles.containerBtn}
+            disabled={isCanceling}
           >
-            <Text style={styles.btnSubmit}>Otkaži</Text>
+            <Text
+              style={[styles.btnSubmit, isCanceling && styles.disabledButton]}
+            >
+              {isCanceling ? "Otkazivanje..." : "Otkaži"}
+            </Text>
           </TouchableOpacity>
         </>
-      ) : (
-        <Loader />
       )}
     </ScrollView>
   );
 };
 const styles = StyleSheet.create({
+  statusContent: {
+    color: "white",
+    padding: 8,
+    fontSize: 20,
+    borderRadius: 5,
+    textAlign: "center",
+    marginBottom: 8,
+},
+  disabledButton: {
+    opacity: 0.5,
+},
   containerWrapper: {
     display: "flex",
     flexDirection: "row",

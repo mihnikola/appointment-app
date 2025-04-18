@@ -73,7 +73,6 @@ exports.getReservations = async (req, res) => {
   ? req.body.headers.Authorization
   : req.get("authorization");
 if (!token) return res.status(403).send("Access denied");
-
   const { date, check } = req.query;
 
   const currentDate = new Date(); // This will be a valid JavaScript Date object
@@ -83,7 +82,6 @@ if (!token) return res.status(403).send("Access denied");
     const emplId = date ? decoded.id : null;
     const customerId = date ? null : decoded.id;
     let reservations = [];
-   
     if (!date) {
       reservations = await Reservation.find({
         user: customerId,
@@ -96,6 +94,8 @@ if (!token) return res.status(403).send("Access denied");
         .sort({ date: 1 })
         .populate("service") // Populate service data
         .populate("employer"); // Populate employee data
+
+
     } else {
       reservations = await Reservation.find({
         status: { $nin: [2] },
@@ -112,14 +112,15 @@ if (!token) return res.status(403).send("Access denied");
 };
 
 exports.patchReservationById = async (req, res) => {
+
   try {
     const { id } = req.params;
-    const { status } = req.body.params;
     const reservation = await Reservation.findByIdAndUpdate(
       id,
-      { status },
+      { status: 2 },
       { new: true }
     );
+    console.log("sadasdas",reservation)
     if (!reservation) {
       return res.status(404).send("Reservation not found");
     }
@@ -161,6 +162,7 @@ exports.getReservationById = async (req, res) => {
           return doc;
         },
       }); // Populate employee data;
+      console.log("object",reservationItem)
     res.status(200).json(reservationItem);
   } catch (error) {
     res.status(500).json({ error: err.message });

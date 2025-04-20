@@ -30,7 +30,6 @@ exports.sendNotification = async (req, res) => {
   try {
     let messages = []; // Initialize messages as an empty array
 
-    if (status === 'scheduled') {
       if (Expo.isExpoPushToken(tokenExpo)) {
         messages.push({ // Push a single message object into the array
           to: tokenExpo,
@@ -40,7 +39,6 @@ exports.sendNotification = async (req, res) => {
       } else {
         console.log(`Invalid Expo push token: ${tokenExpo}`);
       }
-    }
 
     if (messages.length > 0) { // Check if the messages array has any elements
       const chunks = expo.chunkPushNotifications(messages);

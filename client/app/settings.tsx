@@ -51,33 +51,33 @@ const SettingsComponent = () => {
       />
       <View style={styles.containerInfo}>
         <SettingItem
-          title="Korisnički profil"
+          title="User profile"
           icon="person.outline"
           handlePress={() => onPressHandler("1")}
         />
 
         <SettingItem
-          title="Notifikacije"
+          title="Notifications"
           icon="notifications.fill"
           handlePress={() => onPressHandler("3")}
         />
         <SettingItem
-          title="Pravila privatnosti"
+          title="Privacy policy"
           icon="lock"
           handlePress={() => onPressHandler("4")}
         />
         <SettingItem
-          title="Uslovi korišćenja"
+          title="Using Conditions"
           icon="file"
           handlePress={() => onPressHandler("5")}
         />
         <SettingItem
-          title="O aplikaciji"
+          title="About application"
           icon="info"
           handlePress={() => onPressHandler("2")}
         />
         <SettingItem
-          title="Odjavi me"
+          title="Log out"
           icon="logout"
           handlePress={() => onPressHandler("6")}
         />

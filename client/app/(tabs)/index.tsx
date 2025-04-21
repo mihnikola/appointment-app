@@ -1,8 +1,19 @@
+
+
+
+
+
+
+
+
+
+
+
+
 import React, { useEffect, useState } from "react";
 import {
   Text,
   View,
-  Platform,
   Button,
   TextInput,
   StyleSheet,
@@ -21,8 +32,7 @@ import FlatButton from "@/shared-components/Button";
 import AboutUsInfo from "@/app/components/home/AboutUsInfo";
 import ListAboutUs from "@/app/components/home/ListAboutUs";
 import OnboardingComponent from "@/components/OnboardingComponent";
-import Storage from "expo-storage";
-import { getStorage, removeStorage } from "@/helpers";
+import { getStorage } from "@/helpers";
 import axios from "axios";
 import { MAIN_DATA } from "@/constants";
 
@@ -57,84 +67,67 @@ export default function HomeScreen() {
   const [notification, setNotification] = useState(false);
   const [tokenVal, setTokenVal] = useState("");
 
-  useEffect(() => {
-    setTimeout(() => {
-      getStorage()
-        .then((res) => {
-          if (res) {
-            console.log("initailToken",res)
-            setTokenVal(res);
-          }
-        })
-        .catch((error) => {
-          console.log("error", error);
-        });
-    }, 1000);
-  }, []);
-  useEffect(() => {
+  const getPushToken = async (tokenUser) => {
+    console.log("start get push");
+    // Request permission for notifications
+    const { status } = await requestPermissionsAsync();
+    console.log("status", status);
+    if (status === "granted") {
+      console.log("start get expo token");
+      // Get the Expo Push Token (which is equivalent to FCM Token in this case)
 
-// Request permissions from the user
-    if (tokenVal) {
+      const token = await getExpoPushTokenAsync();
 
+      // const token = await Notifications.getDevicePushTokenAsync();
+      console.log("tokenV", status, token);
 
+      setExpoPushToken(token.data);
+      console.log("Expo Push Token:", token.data);
 
-      const getPushToken = async () => {
-        console.log("start get push")
-        // Request permission for notifications
-        const { status } = await requestPermissionsAsync();
-        console.log("status",status)
-        if (status === "granted") {
-          console.log("start get expo token")
-          // Get the Expo Push Token (which is equivalent to FCM Token in this case)
-   
-            const token = await getExpoPushTokenAsync();
- 
-       
-          // const token = await Notifications.getDevicePushTokenAsync();
-          console.log("tokenV",status,token)
-
-          setExpoPushToken(token.data);
-          console.log("Expo Push Token:", token.data);
-
-          // Optionally, send this token to your backend (Node.js)
-          sendTokenToServer(token.data);
-        }
-      };
-
-      getPushToken();
-
-      const notificationListener =
-        Notifications.addNotificationReceivedListener((notification) => {
-          console.log("addNotificationReceivedListener++++", notification);
-          setNotification(notification);
-        });
-
-      const responseListener =
-        Notifications.addNotificationResponseReceivedListener((response) => {
-          // console.log("addNotificationResponseReceivedListener++++",response.notification.request.content.body);
-          setNotification(response);
-          // navigation.navigate("components/services/menuservices");
-        });
-
-      // Clean up the listeners when the component is unmounted
-
-      return () => {
-        notificationListener.remove();
-        responseListener.remove();
-      };
+      // Optionally, send this token to your backend (Node.js)
+      sendTokenToServer(token.data, tokenUser);
     }
-  }, [tokenVal]);
+  };
+  useEffect(() => {
+    // Request permissions from the user
+
+    getStorage()
+      .then((res) => {
+        getPushToken(res);
+      })
+      .catch((e) => console.log("get storage token user", e));
+
+    const notificationListener = Notifications.addNotificationReceivedListener(
+      (notification) => {
+        console.log("addNotificationReceivedListener++++", notification);
+        setNotification(notification);
+      }
+    );
+
+    const responseListener =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        // console.log("addNotificationResponseReceivedListener++++",response.notification.request.content.body);
+        setNotification(response);
+        // navigation.navigate("components/services/menuservices");
+      });
+
+    // Clean up the listeners when the component is unmounted
+
+    return () => {
+      notificationListener.remove();
+      responseListener.remove();
+    };
+  }, []);
 
   // Send the push token to your server (Node.js backend) ok
-  const sendTokenToServer = async (data) => {
+  const sendTokenToServer = async (data,token)  => {
     console.log(data);
-
 
     try {
       await axios
         .post(`${process.env.EXPO_PUBLIC_API_URL}/api/save-token`, {
           tokenExpo: data,
-          tokenUser: tokenVal,
+          tokenUser: token,
         })
         .then((res) => {
           console.log(res);
@@ -182,7 +175,7 @@ export default function HomeScreen() {
           />
         </TouchableHighlight>
       </View>
-      {/* 
+      {/*
     <View
       style={{
         marginTop: 200,
@@ -292,7 +285,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     backgroundColor: "#000000",
-    
   },
   container: {
     flex: 1,

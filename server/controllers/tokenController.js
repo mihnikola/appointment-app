@@ -1,3 +1,12 @@
+
+
+
+
+
+
+
+
+
 const { default: Expo } = require("expo-server-sdk");
 const Token = require("../models/Token");
 const expo = new Expo();
@@ -31,11 +40,14 @@ exports.saveToken = async (req, res) => {
 exports.sendNotification = async (req, res) => {
   const { message, token } = req.body.params;
   try {
+    console.log("token-----",token);
+
     // Fetch all stored tokens from MongoDB
     const tokens = await Token.find({token});
     // Prepare push notifications payload for each token
-
     let messages = [];
+    console.log("tokens+++",tokens);
+
     for (let token of tokens) {
       if (Expo.isExpoPushToken(token.token)) {
         messages.push({
@@ -48,6 +60,7 @@ exports.sendNotification = async (req, res) => {
       }
     }
   
+console.log("object",messages);
 
     if (messages.length > 0) {
       // Send notifications through Expo's service
@@ -71,5 +84,11 @@ exports.sendNotification = async (req, res) => {
     res.status(500).send("Failed to send notification");
   }
 };
+
+
+
+
+
+
 
 

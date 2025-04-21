@@ -1,12 +1,3 @@
-
-
-
-
-
-
-
-
-
 const { default: Expo } = require("expo-server-sdk");
 const Token = require("../models/Token");
 const expo = new Expo();
@@ -18,14 +9,19 @@ exports.saveToken = async (req, res) => {
   const { tokenExpo, tokenUser } = req.body;
   try {
     // Save the token to MongoDB
-    const decoded = jwt.verify(tokenUser, process.env.JWT_SECRET_KEY);
-    const tokens = await Token.findOne({token: tokenExpo});
-    if (tokens) {
-       return res.status(200).send("Token already exist");
 
+    const tokens = await Token.findOne({ token: tokenExpo });
+    if (tokens) {
+      return res.status(200).send("Token already exist");
     } else {
-      const newToken = new Token({ token: tokenExpo, user: decoded.id });
-      await newToken.save();
+      if (tokenUser) {
+        const decoded = jwt.verify(tokenUser, process.env.JWT_SECRET_KEY);
+        const newToken = new Token({ token: tokenExpo, user: decoded.id });
+        await newToken.save();
+      } else {
+        const newToken = new Token({ token: tokenExpo, user: null });
+        await newToken.save();
+      }
 
       res.status(200).send("Token saved successfully");
       console.log("Token saved successfully");
@@ -40,13 +36,13 @@ exports.saveToken = async (req, res) => {
 exports.sendNotification = async (req, res) => {
   const { message, token } = req.body.params;
   try {
-    console.log("token-----",token);
+    console.log("token-----", token);
 
     // Fetch all stored tokens from MongoDB
-    const tokens = await Token.find({token});
+    const tokens = await Token.find({ token });
     // Prepare push notifications payload for each token
     let messages = [];
-    console.log("tokens+++",tokens);
+    console.log("tokens+++", tokens);
 
     for (let token of tokens) {
       if (Expo.isExpoPushToken(token.token)) {
@@ -59,8 +55,8 @@ exports.sendNotification = async (req, res) => {
         console.log(`Invalid Expo push token: ${token.token}`);
       }
     }
-  
-console.log("object",messages);
+
+    console.log("object", messages);
 
     if (messages.length > 0) {
       // Send notifications through Expo's service
@@ -84,11 +80,3 @@ console.log("object",messages);
     res.status(500).send("Failed to send notification");
   }
 };
-
-
-
-
-
-
-
-

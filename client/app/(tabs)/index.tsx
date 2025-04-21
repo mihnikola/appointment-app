@@ -48,28 +48,18 @@ export default function HomeScreen() {
   };
   const [notification, setNotification] = useState(false);
 
-  const getPushToken = async (tokenUser) => {
+  const getPushToken = async () => {
     // Request permission for notifications
     const { status } = await requestPermissionsAsync();
     if (status === "granted") {
       // Get the Expo Push Token (which is equivalent to FCM Token in this case)
       const token = await getExpoPushTokenAsync();
       // Optionally, send this token to your backend (Node.js)
-      sendTokenToServer(token.data, tokenUser);
+      sendTokenToServer(token.data);
     }
   };
   useEffect(() => {
-    // Request permissions from the user
-
-    getStorage()
-      .then((res) => {
-        console.log("getStorage token  ",res)
-        if (res) {
-          getPushToken(res);
-        }
-      })
-      .catch((e) => console.log("get storage token user", e));
-
+    getPushToken();
     const notificationListener = Notifications.addNotificationReceivedListener(
       (notification) => {
         console.log("addNotificationReceivedListener++++", notification);
@@ -93,14 +83,12 @@ export default function HomeScreen() {
   }, []);
 
   // Send the push token to your server (Node.js backend) ok
-  const sendTokenToServer = async (data, token) => {
-    console.log(data);
-
+  const sendTokenToServer = async (data) => {
     try {
       await axios
         .post(`${process.env.EXPO_PUBLIC_API_URL}/api/save-token`, {
           tokenExpo: data,
-          tokenUser: token,
+          tokenUser:null,
         })
         .then((res) => {
           console.log(res);

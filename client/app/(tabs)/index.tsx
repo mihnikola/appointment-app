@@ -1,21 +1,7 @@
-
-
-
-
-
-
-
-
-
-
-
-
 import React, { useEffect, useState } from "react";
 import {
   Text,
   View,
-  Button,
-  TextInput,
   StyleSheet,
   ScrollView,
   Image,
@@ -50,8 +36,6 @@ Notifications.addNotificationReceivedListener((notification) => {
   // Handle the background notification
 });
 
-const tokenData = getStorage();
-
 const yosemite = { latitude: 43.724943, longitude: 20.6952 };
 
 export default function HomeScreen() {
@@ -62,28 +46,14 @@ export default function HomeScreen() {
   const nextPage = () => {
     navigation.navigate("(tabs)", { screen: "employers" });
   };
-
-  const [expoPushToken, setExpoPushToken] = useState("");
   const [notification, setNotification] = useState(false);
-  const [tokenVal, setTokenVal] = useState("");
 
   const getPushToken = async (tokenUser) => {
-    console.log("start get push");
     // Request permission for notifications
     const { status } = await requestPermissionsAsync();
-    console.log("status", status);
     if (status === "granted") {
-      console.log("start get expo token");
       // Get the Expo Push Token (which is equivalent to FCM Token in this case)
-
       const token = await getExpoPushTokenAsync();
-
-      // const token = await Notifications.getDevicePushTokenAsync();
-      console.log("tokenV", status, token);
-
-      setExpoPushToken(token.data);
-      console.log("Expo Push Token:", token.data);
-
       // Optionally, send this token to your backend (Node.js)
       sendTokenToServer(token.data, tokenUser);
     }
@@ -93,7 +63,10 @@ export default function HomeScreen() {
 
     getStorage()
       .then((res) => {
-        getPushToken(res);
+        console.log("getStorage token  ",res)
+        if (res) {
+          getPushToken(res);
+        }
       })
       .catch((e) => console.log("get storage token user", e));
 
@@ -120,7 +93,7 @@ export default function HomeScreen() {
   }, []);
 
   // Send the push token to your server (Node.js backend) ok
-  const sendTokenToServer = async (data,token)  => {
+  const sendTokenToServer = async (data, token) => {
     console.log(data);
 
     try {
@@ -139,6 +112,7 @@ export default function HomeScreen() {
       console.error("Error sending token to server:", error);
     }
   };
+
 
   return (
     <ScrollView style={styles.container}>
@@ -175,40 +149,20 @@ export default function HomeScreen() {
           />
         </TouchableHighlight>
       </View>
-      {/*
-    <View
-      style={{
-        marginTop: 200,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text style={{ color: "white" }}>
-        Your Expo Push Token (FCM Token): {expoPushToken}
-      </Text>
-      <Button onPress={sendNotificationHandler} title="SEND A NOTIFICATION" />
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your message"
-        value={message}
-        onChangeText={setMessage}
-      />
-      {notification ? (
-        <Text style={{ color: "white" }}>
-          {" "}
-          {notification.request.content.body}
-        </Text>
-      ) : (
-        <Text style={{ marginTop: 200, color: "white" }}>alooo</Text>
-      )}
-    </View>
-*/}
+      
+   
+
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  buttonga:{
+    alignItems: 'center',
+    backgroundColor: 'blue',
+    padding: 10,
+
+  },
   input: {
     width: "80%",
     height: 40,

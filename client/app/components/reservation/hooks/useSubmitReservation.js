@@ -24,6 +24,7 @@ const useSubmitReservation = () => {
         return;
       }
       
+      console.log("post reservations ",dateReservation,timeData.value)
 
       try {
         const response = await post('/reservations', {

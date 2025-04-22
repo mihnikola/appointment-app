@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { get } from "@/api/apiService";
+import { get, getData } from "@/api/apiService";
 import { getStorage } from "@/helpers";
 
 const convertDateRequest = (dateObj) => {
@@ -45,8 +45,7 @@ const useFetchTimes = (date, reservation) => {
 
       try {
 
-        const tokenData = await getStorage();
-        const response = await get("/times", {
+        const response = await getData("/times", {
           params: {
             date: dateValue,
             employer: employerData,

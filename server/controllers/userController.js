@@ -82,6 +82,7 @@ exports.createUser = async (req, res) => {
 };
 
 // exports.verifyEmail = async (req, res) => {
+
 //   const { token } = req.query; // The token is sent as part of the URL
 //   try {
 //     // Verify the token using the secret key
@@ -113,6 +114,8 @@ exports.createUser = async (req, res) => {
 //     res.status(500).json({ error: "Failed to verify the token." });
 //   }
 // };
+
+
 
 //loginAdminUser
 exports.loginAdminUser = async (req, res) => {
@@ -164,7 +167,6 @@ exports.loginUser = async (req, res) => {
 
   try {
     const { email, password } = req.body;
-
     // Find the user in the "database"
     const user = await User.findOne({ email }); // `findOne` is typically better if you expect a single result
 
@@ -185,7 +187,7 @@ exports.loginUser = async (req, res) => {
 
 
     const userData = {
-      id: user._id,
+      id: user._id.toHexString(),
       email: user.email,
     };
     // Create JWT token
@@ -198,7 +200,6 @@ exports.loginUser = async (req, res) => {
     res.status(200).json({ token });
     // Send the token as a response
   } catch (err) {
-    console.log("loginUser err ",err)
     res.status(500).json({ error: err.message });
   }
 };

@@ -37,7 +37,17 @@ exports.createTime = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+function convertToDateFormat(dateStr) {
+  // Parse the input date string to a Date object
+  return dateStr.split('T')[0]; // Replace 'Z' with '+00:00'
+}
 
+function getDateRange(dateString) {
+  const start = new Date(dateString + 'T00:00:00.000Z');
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return { start, end };
+}
 exports.getTimes = async (req, res) => {
   const now = new Date();
   const token = req.header("Authorization")
@@ -47,21 +57,23 @@ exports.getTimes = async (req, res) => {
     : req.get("authorization");
   if (!token) return res.status(403).send("Access denied");
 
-  console.log("token",token)
 
   try {
-    const { date, service, employer } = req.query;
+    const { date, service, employer } = req.query.params;
+
+
     let decoded = null;
     if (token) {
       decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     }
     const emplId = decoded ? decoded.id : employer.id;
-
+    const { start, end } = getDateRange(convertToDateFormat(date));
     const reservation = await Reservation.find({
       status: { $nin: [2] },
       user: emplId,
-      date,
+      date: { $gte: start, $lt: end }
     }).populate("service", "duration"); // This will populate only the 'duration' field from the Service model
+
 
     if (reservation.length > 0) {
       const times = timeToParameters(reservation);
@@ -78,9 +90,13 @@ exports.getTimes = async (req, res) => {
             : null,
         };
       });
+
       const time = result.map((item) => {
         return addMinutesToTime(item.hours, item.minutes, item.duration);
       });
+
+
+
       const reservationValueTimesData = reservation.map((item) => {
         return convertWithChooseService(item.time, service.duration - 10);
       });

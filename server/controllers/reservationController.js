@@ -16,6 +16,7 @@ exports.createReservation = async (req, res) => {
   try {
     const { date, time, service_id, token, customer, employerId } =
       req.body.params;
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     const tokenExpo = await Token.findOne({ user: decoded.id });
 
@@ -24,24 +25,13 @@ exports.createReservation = async (req, res) => {
     const employerData = employerId === "" ? decoded.id : employerId;
     const status = customer !== "" ? 1 : 0;
     const timeStampValue = convertToTimeStamp(date?.dateString, time);
-    const newReservation = new Reservation({
-      date: date?.dateString,
-      time,
-      service: service_id,
-      employer: employerData,
-      user: customerId,
-      customer: customerName,
-      status,
-    });
-
-    await newReservation.save();
 
     const functionUrl =
       "https://us-central1-barber-demo-218de.cloudfunctions.net/addTaskCollection";
-      const searchParams = {
-        timeStampValue,
-        tokenExpo,
-      };
+    const searchParams = {
+      timeStampValue,
+      tokenExpo,
+    };
     const requestOptions = {
       method: "POST",
       headers: {
@@ -57,6 +47,20 @@ exports.createReservation = async (req, res) => {
       console.error("Error calling function:", error);
     }
 
+    const dateValue = timeStampValue.replace("Z", "+00:00");
+
+    const newReservation = new Reservation({
+      date: dateValue,
+      time,
+      service: service_id,
+      employer: employerData,
+      user: customerId,
+      customer: customerName,
+      status,
+    });
+
+    await newReservation.save();
+
     res.status(201).json(newReservation);
   } catch (err) {
     console.log("errorcina", err);
@@ -66,36 +70,32 @@ exports.createReservation = async (req, res) => {
 
 // Get all reservations
 exports.getReservations = async (req, res) => {
-
   const token = req.header("Authorization")
-  ? req.header("Authorization").split(" ")[1]
-  : req.body.headers.Authorization
-  ? req.body.headers.Authorization
-  : req.get("authorization");
-if (!token) return res.status(403).send("Access denied");
+    ? req.header("Authorization").split(" ")[1]
+    : req.body.headers.Authorization
+    ? req.body.headers.Authorization
+    : req.get("authorization");
+  if (!token) return res.status(403).send("Access denied");
   const { date, check } = req.query;
-
   const currentDate = new Date(); // This will be a valid JavaScript Date object
+  const twoHoursLater = new Date(currentDate.getTime() + 2 * 60 * 60 * 1000);
+  const isoString = twoHoursLater.toISOString();
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     const dateValue = date ? date : null;
     const emplId = date ? decoded.id : null;
     const customerId = date ? null : decoded.id;
+
     let reservations = [];
     if (!date) {
       reservations = await Reservation.find({
         user: customerId,
         status: { $nin: [2] },
-        date:
-          check === "true"
-            ? { $gte: currentDate.toISOString() }
-            : { $lt: currentDate.toISOString() },
+        date: check === "true" ? { $gte: isoString } : { $lt: isoString },
       })
         .sort({ date: 1 })
         .populate("service") // Populate service data
         .populate("employer"); // Populate employee data
-
-
     } else {
       reservations = await Reservation.find({
         status: { $nin: [2] },
@@ -105,6 +105,7 @@ if (!token) return res.status(403).send("Access denied");
         .populate("service") // Populate service data
         .populate("user"); // Populate employee data
     }
+
     res.status(200).json(reservations);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -112,7 +113,6 @@ if (!token) return res.status(403).send("Access denied");
 };
 
 exports.patchReservationById = async (req, res) => {
-
   try {
     const { id } = req.params;
     const reservation = await Reservation.findByIdAndUpdate(
@@ -120,7 +120,7 @@ exports.patchReservationById = async (req, res) => {
       { status: 2 },
       { new: true }
     );
-    console.log("sadasdas",reservation)
+    console.log("sadasdas", reservation);
     if (!reservation) {
       return res.status(404).send("Reservation not found");
     }
@@ -162,7 +162,7 @@ exports.getReservationById = async (req, res) => {
           return doc;
         },
       }); // Populate employee data;
-      console.log("object",reservationItem)
+    console.log("object", reservationItem);
     res.status(200).json(reservationItem);
   } catch (error) {
     res.status(500).json({ error: err.message });

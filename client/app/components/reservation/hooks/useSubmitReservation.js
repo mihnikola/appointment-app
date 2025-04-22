@@ -104,8 +104,10 @@ const useSubmitReservation = () => {
         setIsLoading(false);
         return;
       }
-        try {
-          const response = await post("/reservations", {
+      
+
+      try {
+        const response = await post('/reservations', {
             params: {
               employerId: employer.id,
               service_id: service.id,

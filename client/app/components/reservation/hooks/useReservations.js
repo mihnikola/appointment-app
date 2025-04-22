@@ -15,6 +15,7 @@ const useReservations = () => {
   const getReservationsData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+
     try {
       const response = await getData("/reservations", {
         check,

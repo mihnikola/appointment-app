@@ -3,7 +3,23 @@ import { post } from "@/api/apiService";
 import ReservationContext from "@/context/ReservationContext";
 import { getStorage } from "@/helpers";
 import { useNavigation } from "@react-navigation/native";
-import { useCallback, useContext, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
+import * as Notifications from "expo-notifications";
+import axios from "axios";
+
+import {
+  getExpoPushTokenAsync,
+  requestPermissionsAsync,
+} from "expo-notifications";
+
+// Handle background notifications using Expo's background handler
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 const useSubmitReservation = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -11,6 +27,71 @@ const useSubmitReservation = () => {
   const navigation = useNavigation();
   const { reservation } = useContext(ReservationContext);
   const [responseData, setResponseData] = useState(null);
+  const [successData, setSuccessData] = useState(false);
+
+  Notifications.addNotificationReceivedListener((notification) => {
+    console.log("Background notification received:", notification);
+    // Handle the background notification
+  });
+
+  const [notification, setNotification] = useState(false);
+
+  const getPushToken = async (userToken) => {
+    // Request permission for notifications
+    const { status } = await requestPermissionsAsync();
+    if (status === "granted") {
+      // Get the Expo Push Token (which is equivalent to FCM Token in this case)
+      const token = await getExpoPushTokenAsync();
+      // Optionally, send this token to your backend (Node.js)
+      sendTokenToServer(token.data, userToken);
+    }
+  };
+
+
+  useEffect(() => {
+    const notificationListener = Notifications.addNotificationReceivedListener(
+      (notification) => {
+        console.log("addNotificationReceivedListener++++", notification);
+        setNotification(notification);
+      }
+    );
+
+    const responseListener =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        // console.log("addNotificationResponseReceivedListener++++",response.notification.request.content.body);
+        setNotification(response);
+        // navigation.navigate("components/services/menuservices");
+      });
+
+    // Clean up the listeners when the component is unmounted
+
+    return () => {
+      notificationListener.remove();
+      responseListener.remove();
+    };
+  }, []);
+
+  // Send the push token to your server (Node.js backend) ok
+  const sendTokenToServer = async (data, userToken) => {
+    try {
+      await axios
+        .post(`${process.env.EXPO_PUBLIC_API_URL}/api/save-token`, {
+          tokenExpo: data,
+          tokenUser: userToken,
+        })
+        .then((res) => {
+          setSuccessData(true);
+          console.log(res);
+          if (res.status === 404) {
+            console.log("Prc vec ima");
+          }
+        });
+    } catch (error) {
+      console.error("Error sending token to server:", error);
+    }
+   await submitReservation(userToken);
+
+  };
 
   const submitReservation = useCallback(
     async (tokenData) => {
@@ -23,10 +104,8 @@ const useSubmitReservation = () => {
         setIsLoading(false);
         return;
       }
-      
-
-      try {
-        const response = await post('/reservations', {
+        try {
+          const response = await post("/reservations", {
             params: {
               employerId: employer.id,
               service_id: service.id,
@@ -34,22 +113,21 @@ const useSubmitReservation = () => {
               date: dateReservation,
               customer: "", //  Where is this data coming from?
               token: tokenData,
-
             },
-          }
-        );
-        setResponseData(response);
-        console.log("setResponseData",response)
-        navigation.navigate("components/reservation/makereservation"); // Make sure this path is correct
-        setIsLoading(false);
-      } catch (err) {
-        console.error("Error submitting reservation:", err);
-        setError(
-          err.message ||
-            "An unexpected error occurred while submitting your reservation."
-        );
-        setIsLoading(false);
-      }
+          });
+          setResponseData(response);
+          console.log("setResponseData", response);
+          navigation.navigate("components/reservation/makereservation"); // Make sure this path is correct
+          setIsLoading(false);
+        } catch (err) {
+          console.error("Error submitting reservation:", err);
+          setError(
+            err.message ||
+              "An unexpected error occurred while submitting your reservation."
+          );
+          setIsLoading(false);
+        }
+
       setIsLoading(false);
     },
     [navigation, reservation]
@@ -59,7 +137,7 @@ const useSubmitReservation = () => {
     try {
       const tokenData = await getStorage();
       if (tokenData) {
-        await submitReservation(tokenData);
+        await getPushToken(tokenData);
       } else {
         setError("Authentication token is missing. Please log in again.");
       }
@@ -72,7 +150,7 @@ const useSubmitReservation = () => {
     }
   }, [submitReservation]);
 
-  return { submitReservationHandler, isLoading, error };
+  return { submitReservationHandler, isLoading, error,getPushToken };
 };
 
 export default useSubmitReservation;

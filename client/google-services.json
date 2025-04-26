@@ -7,12 +7,25 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:471487463729:android:c363c1a66198fbd287b010",
+        "mobilesdk_app_id": "1:471487463729:android:be9989f79c1eb87187b010",
         "android_client_info": {
-          "package_name": "com.mihaola.barberdemo"
+          "package_name": "com.mihaola993.barberdemo"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "471487463729-v5ph1nfc4705f8mva9bumr55pktro3q9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mihaola993.barberdemo",
+            "certificate_hash": "c4f6ec45f92e1d3f7a82ad4edf5b9c2ebb9f9f5a"
+          }
+        },
+        {
+          "client_id": "471487463729-emrhinaoaqnhb63agu7jroeu2ohbrv9q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBTQO6eLNyD-EWlTX69skuCZoFZJ-eX9uc"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "471487463729-emrhinaoaqnhb63agu7jroeu2ohbrv9q.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

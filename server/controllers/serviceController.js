@@ -77,7 +77,6 @@ exports.putService = async (req, res) => {
 exports.getServices = async (req, res) => {
   try {
     const services = await Service.find();
-    console.log("object",services)
     const servicesData = services.map((item) => {
       return {
         id: item._id,
@@ -90,7 +89,6 @@ exports.getServices = async (req, res) => {
 
     res.status(200).json(servicesData);
   } catch (err) {
-    console.log("first",err)
     res.status(500).json({ message: err.message });
   }
 };

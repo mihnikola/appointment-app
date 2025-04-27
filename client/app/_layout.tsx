@@ -1,4 +1,5 @@
 // /app/layout/RootLayout.tsx
+import { ReservationProvider } from "@/context/ReservationContext";
 import {
   DarkTheme,
   DefaultTheme,
@@ -8,12 +9,10 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useColorScheme } from "react-native";
 import * as Notifications from "expo-notifications";
 import * as TaskManager from "expo-task-manager";
-import { useColorScheme } from "@/hooks/useColorScheme";
-import { ReservationProvider } from "@/context/ReservationContext";
-import { NotificationProvider } from "@/context/NotificationContext";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -37,6 +36,7 @@ TaskManager.defineTask(
   }
 );
 
+
 Notifications.registerTaskAsync(BACKGROUND_NOTIFICATION_TASK);
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -58,8 +58,9 @@ export default function RootLayout() {
     return null;
   }
 
+
+
   return (
-    <NotificationProvider>
       <ReservationProvider>
         <ThemeProvider
           value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
@@ -107,6 +108,5 @@ export default function RootLayout() {
           <StatusBar style="auto" />
         </ThemeProvider>
       </ReservationProvider>
-    </NotificationProvider>
   );
 }

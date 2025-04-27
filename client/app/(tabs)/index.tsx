@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   Text,
   View,
@@ -15,9 +15,9 @@ import AboutUsInfo from "@/app/components/home/AboutUsInfo";
 import ListAboutUs from "@/app/components/home/ListAboutUs";
 import OnboardingComponent from "@/components/OnboardingComponent";
 
+
+
 import { MAIN_DATA } from "@/constants";
-
-
 
 const yosemite = { latitude: 43.724943, longitude: 20.6952 };
 
@@ -30,55 +30,50 @@ export default function HomeScreen() {
     navigation.navigate("(tabs)", { screen: "employers" });
   };
 
-
   return (
-    <ScrollView style={styles.container}>
-      <Image
-        source={require("@/assets/images/logoImage.png")}
-        style={styles.reactLogo}
-      />
+      <ScrollView style={styles.container}>
+        <Image
+          source={require("@/assets/images/logoImage.png")}
+          style={styles.reactLogo}
+        />
 
-      <View style={styles.contentBtn}>
-        <FlatButton text="Book" onPress={nextPage} />
-      </View>
-      <AboutUsInfo />
-      <View style={styles.content}>
-        <ListAboutUs />
-      </View>
-      <View style={styles.reviewContent}>
-        <Text style={styles.reviewCapture}> {MAIN_DATA.review} </Text>
-        <OnboardingComponent />
-      </View>
+        <View style={styles.contentBtn}>
+          <FlatButton text="Book" onPress={nextPage} />
+        </View>
+        <AboutUsInfo />
+        <View style={styles.content}>
+          <ListAboutUs />
+        </View>
+        <View style={styles.reviewContent}>
+          <Text style={styles.reviewCapture}> {MAIN_DATA.review} </Text>
+          <OnboardingComponent />
+        </View>
 
-      <View style={styles.content}>
-        <Text style={styles.reviewCapture}>{MAIN_DATA.contact}</Text>
-        <Text style={styles.text}>{MAIN_DATA.workDays}</Text>
-        <Text style={styles.text}>{MAIN_DATA.workSaturday}</Text>
-        <Text style={styles.text}>{MAIN_DATA.sunday}</Text>
-      </View>
+        <View style={styles.content}>
+          <Text style={styles.reviewCapture}>{MAIN_DATA.contact}</Text>
+          <Text style={styles.text}>{MAIN_DATA.workDays}</Text>
+          <Text style={styles.text}>{MAIN_DATA.workSaturday}</Text>
+          <Text style={styles.text}>{MAIN_DATA.sunday}</Text>
+        </View>
 
-      <View style={styles.mapContainer}>
-        <Text style={styles.mapCapture}> Location </Text>
-        <TouchableHighlight onPress={openYosemiteZoomedOut}>
-          <Image
-            source={require("../../assets/images/mapimage.jpg")}
-            style={styles.mapImage}
-          />
-        </TouchableHighlight>
-      </View>
-      
-   
-
-    </ScrollView>
+        <View style={styles.mapContainer}>
+          <Text style={styles.mapCapture}> Location </Text>
+          <TouchableHighlight onPress={openYosemiteZoomedOut}>
+            <Image
+              source={require("../../assets/images/mapimage.jpg")}
+              style={styles.mapImage}
+            />
+          </TouchableHighlight>
+        </View>
+      </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  buttonga:{
-    alignItems: 'center',
-    backgroundColor: 'blue',
+  buttonga: {
+    alignItems: "center",
+    backgroundColor: "blue",
     padding: 10,
-
   },
   input: {
     width: "80%",

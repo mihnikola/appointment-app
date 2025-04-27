@@ -2,8 +2,10 @@ const { prettyUrlDataImage, convertToTimeStamp } = require("../helpers/utils");
 const Reservation = require("../models/Reservation");
 const Token = require("../models/Token");
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
 const admin = require("firebase-admin");
+const axios = require("axios");
+
+require("dotenv").config();
 
 if (!admin.apps.length) {
   const serviceAccount = require("../helpers/barber-demo-218de-firebase-adminsdk-fbsvc-0f43d447e4.json");
@@ -12,11 +14,82 @@ if (!admin.apps.length) {
   });
 }
 
+async function sendTaskToBackend(task) {
+  console.log("object", task);
+  const functionUrl =
+    "https://addtasktofirestore-2fgibvbt4q-uc.a.run.app/addTaskToFirestore";
+
+  // try {
+  await axios
+    .post(functionUrl, { taskData: task })
+    .then((res) => {
+      console.log("solve", res.data.message);
+    })
+    .catch((err) => {
+      console.log("solve", err);
+    });
+}
+
+// exports.createReservation = async (req, res) => {
+//   try {
+//     const { date, time, service_id, token, customer, employerId } =
+//       req.body.params;
+
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+//     const tokenExpo = await Token.findOne({ user: decoded.id });
+
+//     const customerName = customer !== "" ? customer : "";
+//     const customerId = customer !== "" ? null : decoded.id;
+//     const employerData = employerId === "" ? decoded.id : employerId;
+//     const status = customer !== "" ? 1 : 0;
+//     const timeStampValue = convertToTimeStamp(date?.dateString, time);
+
+//     const functionUrl =
+//       "https://us-central1-barber-demo-218de.cloudfunctions.net/addTaskCollection";
+//     const searchParams = {
+//       timeStampValue,
+//       tokenExpo,
+//     };
+//     const requestOptions = {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify(searchParams),
+//     };
+//     try {
+//       const response = await fetch(functionUrl, requestOptions);
+//       const responseJSON = await response.json();
+//       console.log({ responseJSON });
+//     } catch (error) {
+//       console.error("Error calling function:", error);
+//     }
+
+//     const dateValue = timeStampValue.replace("Z", "+00:00");
+
+//     const newReservation = new Reservation({
+//       date: dateValue,
+//       time,
+//       service: service_id,
+//       employer: employerData,
+//       user: customerId,
+//       customer: customerName,
+//       status,
+//     });
+
+//     await newReservation.save();
+
+//     res.status(201).json(newReservation);
+//   } catch (err) {
+//     console.log("errorcina", err);
+//     res.status(500).json({ error: err.message });
+//   }
+// };
+
 exports.createReservation = async (req, res) => {
   try {
     const { date, time, service_id, token, customer, employerId } =
       req.body.params;
-
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     const tokenExpo = await Token.findOne({ user: decoded.id });
 
@@ -25,32 +98,8 @@ exports.createReservation = async (req, res) => {
     const employerData = employerId === "" ? decoded.id : employerId;
     const status = customer !== "" ? 1 : 0;
     const timeStampValue = convertToTimeStamp(date?.dateString, time);
-
-    const functionUrl =
-      "https://us-central1-barber-demo-218de.cloudfunctions.net/addTaskCollection";
-    const searchParams = {
-      timeStampValue,
-      tokenExpo,
-    };
-    const requestOptions = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(searchParams),
-    };
-    try {
-      const response = await fetch(functionUrl, requestOptions);
-      const responseJSON = await response.json();
-      console.log({ responseJSON });
-    } catch (error) {
-      console.error("Error calling function:", error);
-    }
-
-    const dateValue = timeStampValue.replace("Z", "+00:00");
-
     const newReservation = new Reservation({
-      date: dateValue,
+      date: date?.dateString,
       time,
       service: service_id,
       employer: employerData,
@@ -61,6 +110,14 @@ exports.createReservation = async (req, res) => {
 
     await newReservation.save();
 
+    const taskData = {
+      status: "scheduled", // Initial status for the task
+      performAt: timeStampValue, // Use the reservation time as the performAt time
+      token: tokenExpo.token,
+
+      // Add other relevant task details if needed
+    };
+    sendTaskToBackend(taskData);
     res.status(201).json(newReservation);
   } catch (err) {
     console.log("errorcina", err);
@@ -120,7 +177,6 @@ exports.patchReservationById = async (req, res) => {
       { status: 2 },
       { new: true }
     );
-    console.log("sadasdas", reservation);
     if (!reservation) {
       return res.status(404).send("Reservation not found");
     }
@@ -162,7 +218,6 @@ exports.getReservationById = async (req, res) => {
           return doc;
         },
       }); // Populate employee data;
-    console.log("object", reservationItem);
     res.status(200).json(reservationItem);
   } catch (error) {
     res.status(500).json({ error: err.message });

@@ -21,9 +21,9 @@ const SettingsComponent = () => {
   };
 
   const alertMessageHandler = () => {
-    Alert.alert("Obavestenje", "Da li ste sigurni da želite da se odjavite?", [
+    Alert.alert("Info", "Are you sure want to log out?", [
       {
-        text: "Odustani",
+        text: "Cancel",
         onPress: () => console.log("Cancel Pressed"),
         style: "cancel",
       },

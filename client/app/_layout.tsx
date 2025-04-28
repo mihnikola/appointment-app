@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { useColorScheme } from "react-native";
 import * as Notifications from "expo-notifications";
 import * as TaskManager from "expo-task-manager";
+import { NotificationProvider } from "@/context/NotificationContext";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -36,7 +37,6 @@ TaskManager.defineTask(
   }
 );
 
-
 Notifications.registerTaskAsync(BACKGROUND_NOTIFICATION_TASK);
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -58,9 +58,8 @@ export default function RootLayout() {
     return null;
   }
 
-
-
   return (
+    <NotificationProvider>
       <ReservationProvider>
         <ThemeProvider
           value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
@@ -108,5 +107,6 @@ export default function RootLayout() {
           <StatusBar style="auto" />
         </ThemeProvider>
       </ReservationProvider>
+    </NotificationProvider>
   );
 }

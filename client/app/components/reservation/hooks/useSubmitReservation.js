@@ -36,16 +36,7 @@ const useSubmitReservation = () => {
 
   const [notification, setNotification] = useState(false);
 
-  const getPushToken = async (userToken) => {
-    // Request permission for notifications
-    const { status } = await requestPermissionsAsync();
-    if (status === "granted") {
-      // Get the Expo Push Token (which is equivalent to FCM Token in this case)
-      const token = await getExpoPushTokenAsync();
-      // Optionally, send this token to your backend (Node.js)
-      sendTokenToServer(token.data, userToken);
-    }
-  };
+
 
 
   useEffect(() => {
@@ -72,26 +63,7 @@ const useSubmitReservation = () => {
   }, []);
 
   // Send the push token to your server (Node.js backend) ok
-  const sendTokenToServer = async (data, userToken) => {
-    try {
-      await axios
-        .post(`${process.env.EXPO_PUBLIC_API_URL}/api/save-token`, {
-          tokenExpo: data,
-          tokenUser: userToken,
-        })
-        .then((res) => {
-          setSuccessData(true);
-          console.log(res);
-          if (res.status === 404) {
-            console.log("Prc vec ima");
-          }
-        });
-    } catch (error) {
-      console.error("Error sending token to server:", error);
-    }
-   await submitReservation(userToken);
-
-  };
+ 
 
   const submitReservation = useCallback(
     async (tokenData) => {
@@ -139,7 +111,7 @@ const useSubmitReservation = () => {
     try {
       const tokenData = await getStorage();
       if (tokenData) {
-        await getPushToken(tokenData);
+        await submitReservation(tokenData);
       } else {
         setError("Authentication token is missing. Please log in again.");
       }
@@ -152,7 +124,7 @@ const useSubmitReservation = () => {
     }
   }, [submitReservation]);
 
-  return { submitReservationHandler, isLoading, error,getPushToken };
+  return { submitReservationHandler, isLoading, error };
 };
 
 export default useSubmitReservation;

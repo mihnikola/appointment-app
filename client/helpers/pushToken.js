@@ -14,7 +14,8 @@ const saveFcmToken = async (tokenExpo) => {
   if (tokenUser) {
     try {
       const response = await post("/api/save-token", { tokenExpo, tokenUser });
-      console.log("object",response)
+      console.log("saveFcmToken+++",response)
+      console.log("tokenExpo+++",tokenExpo)
     } catch (err) {
       console.error("Error fetching employees:", err);
     }

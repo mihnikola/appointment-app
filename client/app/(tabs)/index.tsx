@@ -6,6 +6,7 @@ import {
   ScrollView,
   Image,
   TouchableHighlight,
+  SafeAreaView,
 } from "react-native";
 
 import { useNavigation } from "@react-navigation/native";
@@ -18,6 +19,8 @@ import OnboardingComponent from "@/components/OnboardingComponent";
 
 
 import { MAIN_DATA } from "@/constants";
+import { useNotification } from "@/context/NotificationContext";
+import { ThemedText } from "@/components/ThemedText";
 
 const yosemite = { latitude: 43.724943, longitude: 20.6952 };
 
@@ -25,10 +28,14 @@ export default function HomeScreen() {
   const navigation = useNavigation();
   const openYosemite = createOpenLink(yosemite);
   const openYosemiteZoomedOut = createOpenLink({ ...openYosemite, zoom: 300 });
-
+  const { notification, expoPushToken, error } = useNotification();
+  if (error) {
+    return <ThemedText>Error: {error.message}</ThemedText>;
+  }
   const nextPage = () => {
     navigation.navigate("(tabs)", { screen: "employers" });
   };
+  console.log(JSON.stringify(notification, null, 2));
 
   return (
       <ScrollView style={styles.container}>
@@ -41,6 +48,15 @@ export default function HomeScreen() {
           <FlatButton text="Book" onPress={nextPage} />
         </View>
         <AboutUsInfo />
+        <SafeAreaView style={{ flex: 1 }}>
+        <ThemedText type="subtitle">Your push token:</ThemedText>
+        <ThemedText>{expoPushToken}</ThemedText>
+        <ThemedText type="subtitle">Latest notification:</ThemedText>
+        <ThemedText>{notification?.request.content.title}</ThemedText>
+        <ThemedText>
+          {JSON.stringify(notification?.request.content.data, null, 2)}
+        </ThemedText>
+      </SafeAreaView>
         <View style={styles.content}>
           <ListAboutUs />
         </View>
